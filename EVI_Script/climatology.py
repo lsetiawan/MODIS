@@ -5,7 +5,7 @@ from rasterio.transform import Affine
 from rasterio.warp import (reproject, Resampling, calculate_default_transform, transform_bounds)
 from math import ceil
 import numpy as np
-import os
+import os, shutil
 
 def project2wgs(gtiff, output):
     with rio.Env():
@@ -15,7 +15,7 @@ def project2wgs(gtiff, output):
 
             print(out_kwargs)
 
-            res = (0.01, 0.01)
+            res = (0.02, 0.02)
             dst_crs = crs.from_string('+units=m +init=epsg:4326')
 
             #dst_width, dst_height = src.width, src.height
@@ -49,81 +49,143 @@ def project2wgs(gtiff, output):
                     resampling=0,
                     num_threads=2)
 
-def calcMean(file_loc,merged,count, dest):
-    climate = os.path.join(dest,'climatology')
-    if not os.path.exists(climate):
-        os.mkdir(climate)
-    out = os.path.join(climate,'EVI_{}.tif'.format(count))
-    total_sum = 0
+
+def calcMean(file_loc, merged, count, out):
     with rio.Env():
-        month = [rio.open(f) for f in file_loc]
-        data = [m.read_band(1) for m in month]
+        #month = [rio.open(f) for f in file_loc]
+        #data = [m.read(1) for m in month]
+        raw = []
+        print("Calculating Mean")
 
-        print(data[0].shape)
+        for f in file_loc:
+            m = rio.open(f)
+            data = m.read(1)
+            #ds = np.resize(data,(6000,8400))
+            #print(ds.shape)
+            raw.append(np.where(data == -3000, np.nan, data))
+            #raw.append(data)
 
+        meanArray = np.nanmean(raw, axis=0)
+        print(meanArray.shape)
+        print meanArray.astype(rio.int16)
 
-        raw = [np.where(data[d] == -3000, np.nan, data[d]) for d in range(0,len(data))]
-        for r in range(0,len(raw)):
-            total_sum = total_sum + raw[r]
-        mean = total_sum / len(data)
+        final_array = np.where(meanArray == np.nan, -3000, meanArray)
+        print final_array
+        '''
+        # print final_array.shape
 
-        profile = month[0].profile
-        src_prj = month[0].crs
-        src_trans = month[0].transform
-        rows = month[0].height
-        cols = month[0].width
+        # raw = [np.where(data[d] == -3000, np.nan, data[d]) for d in range(0,len(data))]
+        # for r in range(0,len(raw)):
+        # total_sum = total_sum + raw[r]
+        # mean = total_sum / len(data)
+        # mean = np.array(raw)
+
+        profile = m.profile
+        src_prj = m.crs
+        src_trans = m.transform
+        #rows = final_array.shape[0]
+        #cols = final_array.shape[1]
         profile['nodata'] = -3000
-
         print(profile)
 
         with rio.open(out, 'w', **profile) as dst:
-            dst_array = np.empty((rows, cols), dtype='int16')
-            reproject(
-                        # Source parameters
-                        source=mean,
-                        src_crs=src_prj,
-                        src_transform=src_trans,
-                        src_nodata = 0,
-                        # Destination paramaters
-                        destination=dst_array,
-                        dst_transform=src_trans,
-                        dst_crs=src_prj,
-                        dst_nodata=-3000,
-                        resampling=0
-                    )
-
-            dst.write(dst_array,1)
+            dst.write(meanArray.astype(rio.int16), 1)'''
 
 def main():
-    dest = 'data/'
+    dest = "/media/lsetiawan/main/data/"
 
-    # Calculate Climatology
     merged = os.path.join(dest, 'merged')
-    month_list = []
-    count = 0
+
+    count = 1
+    dates = []
+    '''for j in range(1, 13):
+        for date in os.listdir(merged):
+            if j == 1 and ".0{}.01".format(j) in date:
+                if not os.path.exists(os.path.join(merged,str(j))):
+                    os.makedirs(os.path.join(merged,str(j)))
+                mv = os.path.join(merged,str(j))
+                shutil.move(os.path.join(merged,date), os.path.join(mv,date))
+            if j == 2 and ".0{}.01".format(j) in date:
+                if not os.path.exists(os.path.join(merged, str(j))):
+                    os.makedirs(os.path.join(merged, str(j)))
+                mv = os.path.join(merged, str(j))
+                shutil.move(os.path.join(merged, date), os.path.join(mv, date))
+            if j == 3 and ".0{}.01".format(j) in date:
+                if not os.path.exists(os.path.join(merged, str(j))):
+                    os.makedirs(os.path.join(merged, str(j)))
+                mv = os.path.join(merged, str(j))
+                shutil.move(os.path.join(merged, date), os.path.join(mv, date))
+            if j == 4 and ".0{}.01".format(j) in date:
+                if not os.path.exists(os.path.join(merged, str(j))):
+                    os.makedirs(os.path.join(merged, str(j)))
+                mv = os.path.join(merged, str(j))
+                shutil.move(os.path.join(merged, date), os.path.join(mv, date))
+            if j == 5 and ".0{}.01".format(j) in date:
+                if not os.path.exists(os.path.join(merged, str(j))):
+                    os.makedirs(os.path.join(merged, str(j)))
+                mv = os.path.join(merged, str(j))
+                shutil.move(os.path.join(merged, date), os.path.join(mv, date))
+            if j == 6 and ".0{}.01".format(j) in date:
+                if not os.path.exists(os.path.join(merged, str(j))):
+                    os.makedirs(os.path.join(merged, str(j)))
+                mv = os.path.join(merged, str(j))
+                shutil.move(os.path.join(merged, date), os.path.join(mv, date))
+            if j == 7 and ".0{}.01".format(j) in date:
+                if not os.path.exists(os.path.join(merged, str(j))):
+                    os.makedirs(os.path.join(merged, str(j)))
+                mv = os.path.join(merged, str(j))
+                shutil.move(os.path.join(merged, date), os.path.join(mv, date))
+            if j == 8 and ".0{}.01".format(j) in date:
+                if not os.path.exists(os.path.join(merged, str(j))):
+                    os.makedirs(os.path.join(merged, str(j)))
+                mv = os.path.join(merged, str(j))
+                shutil.move(os.path.join(merged, date), os.path.join(mv, date))
+            if j == 9 and ".0{}.01".format(j) in date:
+                if not os.path.exists(os.path.join(merged, str(j))):
+                    os.makedirs(os.path.join(merged, str(j)))
+                mv = os.path.join(merged, str(j))
+                shutil.move(os.path.join(merged, date), os.path.join(mv, date))
+            if j == 10 and ".{}.01".format(j) in date:
+                if not os.path.exists(os.path.join(merged, str(j))):
+                    os.makedirs(os.path.join(merged, str(j)))
+                mv = os.path.join(merged, str(j))
+                shutil.move(os.path.join(merged, date), os.path.join(mv, date))
+            if j == 11 and ".{}.01".format(j) in date:
+                if not os.path.exists(os.path.join(merged, str(j))):
+                    os.makedirs(os.path.join(merged, str(j)))
+                mv = os.path.join(merged, str(j))
+                shutil.move(os.path.join(merged, date), os.path.join(mv, date))
+            if j == 12 and ".{}.01".format(j) in date:
+                if not os.path.exists(os.path.join(merged, str(j))):
+                    os.makedirs(os.path.join(merged, str(j)))
+                mv = os.path.join(merged, str(j))
+                shutil.move(os.path.join(merged, date), os.path.join(mv, date))'''
     for j in range(1, 13):
-        dates = [date for date in os.listdir(merged) if "{}.01".format(j) in date]
-        month_list.append(dates)
-    for m in month_list:
-        file_loc = [os.path.join(merged, '{}'.format(i)) for i in m]
-        print(file_loc)
-        calcMean(file_loc, merged, count, dest)
 
-        count = count + 1
+        # Reproject
+        sinu = os.path.join(merged,str(j))
+        epsg = os.path.join(sinu, '4326')
+        for e in os.listdir(sinu):
+            if ".aux.xml" in e or "4326" in e:
+                pass
+            else:
+                gtiff = os.path.join(sinu, '{}'.format(e))
+                if not os.path.exists(epsg):
+                    os.makedirs(epsg)
+                output = os.path.join(epsg, '{}'.format(e))
+                print(gtiff)
+                project2wgs(gtiff, output)
+'''
 
-    # Reproject
-    climate = os.path.join(dest, 'climatology')
-    epsg = os.path.join(climate, '4326')
-    for e in os.listdir(climate):
-        if ".aux.xml" in e or "4326" in e:
-            pass
-        else:
-            gtiff = os.path.join(climate, '{}'.format(e))
-            if not os.path.exists(epsg):
-                os.makedirs(epsg)
-            output = os.path.join(epsg, '{}'.format(e))
-            print(gtiff)
-            project2wgs(gtiff, output)
+        # Calculate climatology
+        file_loc = [os.path.join(merged, '{}/{}'.format(j, m)) for m in os.listdir(epsg)]
+        climate = os.path.join(dest, 'climatology')
+        if not os.path.exists(climate):
+            os.mkdir(climate)
+        out = os.path.join(climate, 'EVI_{}.tif'.format(count))
+        # print(file_loc)
+        calcMean(file_loc, merged, count, out)
+        count = count + 1'''
 
 
 if __name__ == '__main__':

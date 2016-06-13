@@ -75,7 +75,7 @@ def mergeTile(today, merged, Gtiff_files):
             profile.pop('affine')
             profile['transform'] = output_transform
             profile['height'] = data.shape[1]
-            profile['width'] = data.shape[2]-1
+            profile['width'] = data.shape[2]
             profile['driver'] = 'GTiff'
 
             print(profile)
@@ -84,7 +84,7 @@ def mergeTile(today, merged, Gtiff_files):
                 dst.write(data)
 
 def main():
-    dest = "data/"
+    dest = "/media/lsetiawan/main/data/"
     for i in os.listdir(dest):
         if "tif" in i or "4326" in i or "txt" in i or "log" in i or "merge" in i:
             pass
@@ -95,7 +95,7 @@ def main():
             MODIS_files = glob.glob(os.path.join(folder, '*.hdf'))
             #print(MODIS_files)
 
-            convert2GTiff(MODIS_files, folder)
+            #convert2GTiff(MODIS_files, folder)
 
             Gtiff_files = glob.glob(os.path.join(folder, '*.tif'))
             # print(Gtiff_files)
