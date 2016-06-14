@@ -15,7 +15,7 @@ def project2wgs(gtiff, output):
 
             print(out_kwargs)
 
-            res = (0.02, 0.02)
+            res = (0.01, 0.01)
             dst_crs = crs.from_string('+units=m +init=epsg:4326')
 
             #dst_width, dst_height = src.width, src.height
@@ -60,18 +60,17 @@ def calcMean(file_loc, merged, count, out):
         for f in file_loc:
             m = rio.open(f)
             data = m.read(1)
-            #ds = np.resize(data,(6000,8400))
             #print(ds.shape)
             raw.append(np.where(data == -3000, np.nan, data))
             #raw.append(data)
 
-        meanArray = np.nanmean(raw, axis=0)
+        meanArray = np.average(raw, axis=0)
         print(meanArray.shape)
-        print meanArray.astype(rio.int16)
+        #print meanArray.astype(rio.int16)
 
-        final_array = np.where(meanArray == np.nan, -3000, meanArray)
+        final_array = np.where(meanArray == np.nan, -3000, data)
         print final_array
-        '''
+
         # print final_array.shape
 
         # raw = [np.where(data[d] == -3000, np.nan, data[d]) for d in range(0,len(data))]
@@ -89,10 +88,11 @@ def calcMean(file_loc, merged, count, out):
         print(profile)
 
         with rio.open(out, 'w', **profile) as dst:
-            dst.write(meanArray.astype(rio.int16), 1)'''
+            dst.write(final_array, 1)
 
 def main():
-    dest = "/media/lsetiawan/main/data/"
+    #dest = "/media/lsetiawan/main/data/"
+    dest = "/Users/lsetiawan/Desktop/shared_ubuntu/APL/MODIS/data"
 
     merged = os.path.join(dest, 'merged')
 
@@ -165,7 +165,7 @@ def main():
         # Reproject
         sinu = os.path.join(merged,str(j))
         epsg = os.path.join(sinu, '4326')
-        for e in os.listdir(sinu):
+        '''for e in os.listdir(sinu):
             if ".aux.xml" in e or "4326" in e:
                 pass
             else:
@@ -174,18 +174,18 @@ def main():
                     os.makedirs(epsg)
                 output = os.path.join(epsg, '{}'.format(e))
                 print(gtiff)
-                project2wgs(gtiff, output)
-'''
+                project2wgs(gtiff, output)'''
 
         # Calculate climatology
-        file_loc = [os.path.join(merged, '{}/{}'.format(j, m)) for m in os.listdir(epsg)]
+        file_loc = [os.path.join(epsg, '{}'.format(m)) for m in os.listdir(epsg) if m != ".DS_Store"]
+        print file_loc
         climate = os.path.join(dest, 'climatology')
         if not os.path.exists(climate):
             os.mkdir(climate)
         out = os.path.join(climate, 'EVI_{}.tif'.format(count))
         # print(file_loc)
         calcMean(file_loc, merged, count, out)
-        count = count + 1'''
+        count = count + 1
 
 
 if __name__ == '__main__':
