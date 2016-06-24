@@ -95,7 +95,7 @@ def main():
             MODIS_files = glob.glob(os.path.join(folder, '*.hdf'))
             #print(MODIS_files)
 
-            #convert2GTiff(MODIS_files, folder)
+            convert2GTiff(MODIS_files, folder)
 
             Gtiff_files = glob.glob(os.path.join(folder, '*.tif'))
             # print(Gtiff_files)

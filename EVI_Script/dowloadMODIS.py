@@ -74,8 +74,5 @@ def main():
 
     startDownload(tiles,today)
 
-
-
-
 if __name__ == '__main__':
     main()
