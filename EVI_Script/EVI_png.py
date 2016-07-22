@@ -2,6 +2,7 @@
 
 # Import the necessary libraries
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 import os, sys
 import numpy as np
 import xarray as xr
@@ -40,6 +41,24 @@ def make_cmap(colors, position=None, bit=False):
 
     cmap = mpl.colors.LinearSegmentedColormap('my_colormap',cdict,256)
     return cmap
+
+def export_colormap(name, cmap):
+    '''
+    This function is used to export colormap to size of 1000px width and 1px height
+    export_colormap takes a name of the output and the colormap desired to be saved as a png
+    :param name: is the name of the output
+    :param cmap: is the colormap
+    :return: a png file with the colorbar name
+    '''
+    im = np.outer(np.ones(1), np.arange(1000))
+    fig, ax = plt.subplots(1, figsize=(5, 10), subplot_kw=dict(xticks=[], yticks=[]))
+    # fig.subplots_adjust(hspace=0.1)
+    ax.imshow(im, cmap=cmap)
+    ax.axis('off')
+    figure = plt.gcf()  # get current figure
+    figure.set_size_inches(4.3115, 0.5)
+
+    plt.savefig('{}.png'.format(name), bbox_inches='tight', dpi=299.5, transparent=True, format='png', pad_inches=0.0)
 
 def createPNG(fil,name):
     EVI = create_cmap()
@@ -81,6 +100,7 @@ def create_cmap():
     evi_cmap = make_cmap(colors, position=position, bit=True)
     cm.register_cmap(name='evi', cmap=evi_cmap)
     EVI = cm.get_cmap('evi')
+    export_colormap('evi_colorbar',evi_cmap)
 
     return EVI
 

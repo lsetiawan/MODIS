@@ -86,7 +86,6 @@ def main():
     merged = os.path.join(dest, 'merged')
 
     count = 1
-    dates = []
     if ".tif" in os.listdir(merged):
         for j in range(1, 13):
             for date in os.listdir(merged):
